@@ -1,0 +1,35 @@
+name: BloomWorld CI
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  shop-service:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: shop-service
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Check Node.js application syntax
+        run: node --check server.js
