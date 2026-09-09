@@ -1,16 +1,12 @@
 name: BloomWorld CI
 
 on:
-  push:
-    branches:
-      - main
-
   pull_request:
     branches:
       - main
 
 jobs:
-  shop-service:
+  shop-service-ci:
 
     runs-on: ubuntu-latest
 
@@ -23,13 +19,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+          cache-dependency-path: shop-service/package-lock.json
+
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
 
       - name: Check Node.js application syntax
         run: node --check server.js
+
+
+      - name: Run tests
+        run: npm test
+        continue-on-error: true
+
+
+      - name: Build Docker image
+        run: docker build -t shop-service:ci .
