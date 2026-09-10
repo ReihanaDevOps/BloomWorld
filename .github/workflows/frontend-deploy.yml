@@ -1,4 +1,4 @@
-name: Deploy Frontend to Google Cloud Storage
+name: Deploy BloomWorld Frontend
 
 on:
   push:
@@ -9,7 +9,8 @@ on:
       - ".github/workflows/frontend-deploy.yml"
 
 jobs:
-  deploy:
+  deploy-frontend:
+
     runs-on: ubuntu-latest
 
     permissions:
@@ -17,14 +18,17 @@ jobs:
       id-token: write
 
     steps:
+
       - name: Checkout code
         uses: actions/checkout@v4
+
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -33,15 +37,18 @@ jobs:
           cache: "npm"
           cache-dependency-path: frontend/frontend/package-lock.json
 
+
       - name: Install dependencies
         working-directory: frontend/frontend
         run: npm ci
+
 
       - name: Build frontend
         working-directory: frontend/frontend
         run: npm run build
 
-      - name: Deploy to Cloud Storage
+
+      - name: Deploy frontend to Cloud Storage
         run: |
           gcloud storage rsync \
             --recursive \
