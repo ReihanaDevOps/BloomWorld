@@ -49,40 +49,7 @@ Monitoring architecture:
 
 # 📁 Project Structure
 
-```text
-BloomWorld/
-│
-├── frontend/
-│   └── React application
-│
-├── shop-service/
-│   ├── server.js
-│   ├── Dockerfile
-│   └── package.json
-│
-├── kubernets/
-│   ├── namespace.yaml
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   ├── serviceaccount.yaml
-│   ├── gateway.yaml
-│   ├── httproute.yaml
-│   ├── hpa.yaml
-│   └── rbac.yaml
-│
-├── terraform/
-│   ├── main.tf
-│   ├── variables.tf
-│   └── outputs.tf
-│
-├── .github/
-│   └── workflows/
-│       └── deploy.yaml
-│
-├── bloomworld-argocd.yaml
-│
-└── README.md
-```
+
 
 ---
 
