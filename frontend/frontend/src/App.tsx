@@ -22,15 +22,16 @@ function App() {
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  // ================= GET SHOPS FROM BACKEND =================
-
+  
+//backend fetching-------
+  
   useEffect(() => {
   const getShops = async () => {
     try {
       console.log("Fetching shops...");
 
       const response = await fetch(
-        "http://localhost:3000/api/shops"
+        "http://35.207.225.27/api/shops"
       );
 
       console.log("Response status:", response.status);
@@ -64,8 +65,6 @@ function App() {
   getShops();
 }, []);
 
-  // ================= FILTER SHOPS =================
-
   const filteredShops = shops.filter((shop) => {
     const searchMatch = shop.name
       .toLowerCase()
@@ -78,7 +77,6 @@ function App() {
     return searchMatch && cityMatch;
   });
 
-  // ================= GET UNIQUE CITIES =================
 
   const cities = [...new Set(shops.map((shop) => shop.city))];
 
