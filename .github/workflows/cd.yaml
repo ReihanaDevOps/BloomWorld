@@ -45,3 +45,25 @@ jobs:
           tags: |
             asia-south1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPOSITORY }}/shop-service:${{ github.sha }}
             asia-south1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPOSITORY }}/shop-service:latest
+
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: bloomworld-gke
+          location: asia-south1
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+
+      - name: Deploy Kubernetes manifests
+        run: |
+          kubectl apply -f kubernets/namespace.yaml
+          kubectl apply -f kubernets/serviceaccount.yaml
+          kubectl apply -f kubernets/service.yaml
+          kubectl apply -f kubernets/gateway.yaml
+          kubectl apply -f kubernets/httproute.yaml
+          kubectl apply -f kubernets/hpa.yaml
+
+          IMAGE="asia-south1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/${{ vars.ARTIFACT_REPOSITORY }}/shop-service:${{ github.sha }}"
+
+          sed "s|IMAGE_URL|$IMAGE|g" kubernets/deployment.yaml | kubectl apply -f -
