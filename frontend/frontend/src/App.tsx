@@ -96,7 +96,7 @@ function App() {
       setSubmitting(true);
 
       const response = await fetch(
-        "http://localhost:3000/api/shops",
+        "http://35.207.225.27/api/shops",
         {
           method: "POST",
           headers: {
