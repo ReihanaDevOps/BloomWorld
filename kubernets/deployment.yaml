@@ -29,6 +29,9 @@ spec:
 
           ports:
             - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: shop-service-db-secret
 
           resources:
             requests:
