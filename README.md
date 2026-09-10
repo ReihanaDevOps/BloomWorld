@@ -1,10 +1,3 @@
-Yes. You should include a professional `README.md` in your BloomWorld GitHub repository. Based on what you actually implemented, here is a ready-to-use version.
-
-You can copy this into:
-
-```text
-README.md
-```
 
 ---
 
@@ -12,7 +5,7 @@ README.md
 
 ## 📌 Project Overview
 
-BloomWorld is a cloud-native flower shop application designed to demonstrate modern **DevOps and DevSecOps practices**.
+BloomWorld is a cloud-native flower shop application designed to demonstrate  DevOps practices.
 
 The project allows users to browse nearby flower shops and manage shop information. The application is deployed on **Google Kubernetes Engine (GKE)** using Kubernetes, Infrastructure as Code, CI/CD, GitOps, security scanning, and monitoring tools.
 
@@ -22,53 +15,13 @@ The project allows users to browse nearby flower shops and manage shop informati
 
 The BloomWorld infrastructure follows a cloud-native architecture deployed on Google Cloud Platform.
 
-```text
-Developer
-    │
-    ▼
-GitHub Repository
-    │
-    ▼
-GitHub Actions
-    │
-    ├── Build Docker Image
-    │
-    ├── Security Scan (Trivy)
-    │
-    └── Push Image
-            │
-            ▼
-     Google Artifact Registry
-            │
-            ▼
-        Argo CD
-            │
-            ▼
-     Google Kubernetes Engine
-            │
-     ┌──────┴────────┐
-     ▼               ▼
- Kubernetes      Gateway
- Deployment      + HTTPRoute
-     │               │
-     ▼               ▼
- Shop Service   External Access
-```
+<img width="341" height="851" alt="flow" src="https://github.com/user-attachments/assets/482159a8-df00-41a7-ad91-8f24494c3834" />
+
 
 Monitoring architecture:
 
-```text
-GKE Cluster
-    │
-    ▼
-Prometheus
-    │
-    ▼
-Grafana
-    │
-    ▼
-Monitoring Dashboards
-```
+<img width="171" height="301" alt="monitoring" src="https://github.com/user-attachments/assets/ccf713f0-8725-4ff3-b977-ce9fba2bad50" />
+
 
 ---
 
