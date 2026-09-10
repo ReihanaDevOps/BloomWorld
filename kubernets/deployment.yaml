@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: shop-service
+  namespace: bloomworld
+
+spec:
+  replicas: 2
+
+  strategy:
+    type: RollingUpdate
+
+  selector:
+    matchLabels:
+      app: shop-service
+
+  template:
+    metadata:
+      labels:
+        app: shop-service
+
+    spec:
+      serviceAccountName: shop-service-ksa
+
+      containers:
+        - name: shop-service
+          image: IMAGE_URL
+
+          ports:
+            - containerPort: 3000
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
