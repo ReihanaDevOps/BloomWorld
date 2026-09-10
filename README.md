@@ -463,3 +463,45 @@ Terraform is responsible for provisioning the **cloud infrastructure**. After th
 
 ---
 
+For **Grafana access**, you have two options:
+
+### Option 1: Localhost (recommended for README/testing)
+
+If you use:
+
+```bash
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+```
+
+Then access:
+
+```text
+http://localhost:3000
+```
+
+This only works while the terminal command is running.
+
+---
+
+### Option 2: External IP (your current setup)
+
+If you changed the Grafana service to `LoadBalancer`, check:
+
+```bash
+kubectl get svc -n monitoring
+```
+
+You can access Grafana using:
+
+```text
+http://EXTERNAL-IP
+```
+
+Since your screenshot shows Grafana running at:
+
+```text
+http://34.93.138.xx
+```
+
+
+
