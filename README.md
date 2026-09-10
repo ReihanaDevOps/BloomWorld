@@ -46,591 +46,420 @@ Monitoring architecture:
 | Version Control         | GitHub                         |
 
 ---
-```text
-# 📁 Project Structure
 
-BloomWorld/
-│
-├── frontend/
-│   └── React application
-│
-├── shop-service/
-│   ├── server.js
-│   ├── Dockerfile
-│   └── package.json
-│
-├── kubernets/
-│   ├── namespace.yaml
-│   ├── deployment.yaml
-│   ├── service.yaml
-│   ├── serviceaccount.yaml
-│   ├── gateway.yaml
-│   ├── httproute.yaml
-│   ├── hpa.yaml
-│   └── rbac.yaml
-│
-├── terraform/
-│   ├── main.tf
-│   ├── variables.tf
-│   └── outputs.tf
-│
-├── .github/
-│   └── workflows/
-│       └── deploy.yaml
-│
-├── bloomworld-argocd.yaml
-│
-└── README.md
+
+# Prerequisites
+
+Install the following tools:
+
+* Terraform
+* Google Cloud SDK
+* kubectl
+* Helm
+* Git
+* Docker
+
+Login to Google Cloud:
+
+```bash
+gcloud auth login
 ```
+
+Set the GCP project:
+
+```bash
+gcloud config set project YOUR_PROJECT_ID
+```
+
 ---
 
-# ☁️ Infrastructure Provisioning
+# 1. Infrastructure Provisioning
 
-Infrastructure is provisioned using **Terraform**.
+Go to the Terraform directory:
 
-The infrastructure includes:
+```bash
+cd terraform
+```
 
-* GKE Kubernetes cluster
-* Networking components
-* VPC
-* Subnets
-* Kubernetes node pools
-* Artifact Registry
-* Cloud Storage for frontend hosting
-* Load Balancer configuration
-
-Terraform provides Infrastructure as Code (IaC), allowing infrastructure resources to be provisioned and managed consistently.
-
-Example:
+Initialize Terraform:
 
 ```bash
 terraform init
 ```
 
+Review the infrastructure plan:
+
 ```bash
 terraform plan
 ```
+
+Provision the infrastructure:
 
 ```bash
 terraform apply
 ```
 
----
+Terraform provisions the following infrastructure:
 
-# ☸️ Kubernetes Deployment
-
-The BloomWorld backend is deployed to **Google Kubernetes Engine (GKE)**.
-
-The Kubernetes configuration includes:
-
-### Namespace
-
-A dedicated namespace is used:
-
-```text
-bloomworld
-```
-
-### Deployment
-
-The backend application runs as a Kubernetes Deployment.
-
-This provides:
-
-* Pod management
-* Application availability
-* Rolling updates
-* Container orchestration
-
-### Service
-
-A Kubernetes Service exposes the backend application internally.
-
-### Gateway and HTTPRoute
-
-The Kubernetes Gateway API is used for traffic management.
-
-```text
-Client
-   │
-   ▼
-Gateway
-   │
-   ▼
-HTTPRoute
-   │
-   ▼
-Shop Service
-   │
-   ▼
-Application Pods
-```
+* GKE Cluster
+* VPC Networking
+* Subnets
+* Artifact Registry
+* Cloud SQL PostgreSQL
+* Google Secret Manager
+* Cloud Storage Bucket
+* Static Landing Page Infrastructure
 
 ---
 
-# 📈 Horizontal Pod Autoscaling
+# 2. Connect to GKE
 
-Horizontal Pod Autoscaler (HPA) is configured for the backend service.
-
-HPA automatically scales application pods based on resource utilization.
-
-Example:
-
-```text
-Low Traffic
-    │
-    ▼
-Few Pods
-
-High Traffic
-    │
-    ▼
-More Pods Automatically
-```
-
-This improves scalability and resource utilization.
-
----
-
-# 🔐 Security Implementation
-
-The project implements several DevSecOps security practices.
-
-## RBAC
-
-Kubernetes Role-Based Access Control (RBAC) is configured.
-
-This controls which Kubernetes resources a service account can access.
-
-The implementation includes:
-
-* Role
-* Role permissions
-* RoleBinding
-* Service Account
-
-Example flow:
-
-```text
-Service Account
-      │
-      ▼
-RoleBinding
-      │
-      ▼
-Kubernetes Role
-      │
-      ▼
-Allowed Resources
-```
-
----
-
-# 🔍 Container Security Scanning
-
-Trivy is integrated into the CI/CD workflow to scan Docker container images.
-
-The scan checks for vulnerabilities, including:
-
-* HIGH severity vulnerabilities
-* CRITICAL severity vulnerabilities
-
-Pipeline flow:
-
-```text
-Docker Image
-      │
-      ▼
-Trivy Scan
-      │
-      ▼
-Security Results
-      │
-      ▼
-Artifact Registry
-```
-
-This helps identify security vulnerabilities before deployment.
-
----
-
-# 🔄 CI/CD Pipeline
-
-GitHub Actions is used to automate the application build and deployment process.
-
-The pipeline performs the following steps:
-
-```text
-Git Push
-   │
-   ▼
-GitHub Actions
-   │
-   ├── Checkout Code
-   │
-   ├── Authenticate with Google Cloud
-   │
-   ├── Login to Artifact Registry
-   │
-   ├── Build Docker Image
-   │
-   ├── Trivy Security Scan
-   │
-   ├── Push Image to Artifact Registry
-   │
-   ├── Get GKE Credentials
-   │
-   └── Apply Kubernetes Manifests
-```
-
-Google Cloud authentication is performed using **Workload Identity Federation**, avoiding the need to store long-lived GCP service account keys in GitHub.
-
----
-
-# 📦 Artifact Registry
-
-Docker images are stored in **Google Artifact Registry**.
-
-Example image structure:
-
-```text
-asia-south1-docker.pkg.dev/
-    PROJECT_ID/
-        REPOSITORY/
-            shop-service
-```
-
-Images are tagged using:
-
-```text
-Git Commit SHA
-```
-
-and:
-
-```text
-latest
-```
-
-Using commit SHA tags improves image traceability.
-
----
-
-# 🔁 GitOps with Argo CD
-
-Argo CD is deployed inside the Kubernetes cluster to manage application synchronization from the GitHub repository.
-
-The Argo CD application is configured with:
-
-* GitHub repository
-* Kubernetes manifests directory
-* Target namespace
-* Automated synchronization
-* Self-healing
-* Pruning
-
-GitOps workflow:
-
-```text
-GitHub Repository
-        │
-        ▼
-      Argo CD
-        │
-        ▼
-Compare Git State
-with Cluster State
-        │
-        ▼
-Synchronize Kubernetes Resources
-```
-
-### Self-Healing
-
-If the cluster configuration changes manually and differs from the desired configuration stored in Git, Argo CD can restore the desired state.
-
-### Pruning
-
-Resources removed from the Git repository can also be removed from the Kubernetes cluster.
-
----
-
-# 📊 Monitoring
-
-The project uses the **kube-prometheus-stack**, which includes:
-
-* Prometheus
-* Grafana
-* Alertmanager
-* Node Exporter
-* kube-state-metrics
-
-Monitoring architecture:
-
-```text
-Kubernetes Cluster
-       │
-       ▼
-   Prometheus
-       │
-       ▼
-    Grafana
-       │
-       ▼
- Monitoring
- Dashboards
-```
-
-The Grafana dashboards provide visibility into:
-
-* CPU utilization
-* Memory utilization
-* Kubernetes namespaces
-* Pods
-* Nodes
-* Resource requests
-* Resource limits
-* Cluster resource usage
-
-Example dashboards include:
-
-```text
-Kubernetes / Compute Resources / Cluster
-```
-
----
-
-# 🛠️ Troubleshooting
-
-Grafana and Prometheus can be used to investigate Kubernetes resource issues.
-
-Example troubleshooting areas include:
-
-### High CPU Usage
-
-```text
-Grafana
-   │
-   ▼
-CPU Utilization Dashboard
-   │
-   ▼
-Identify Namespace / Pod
-   │
-   ▼
-Investigate Application
-```
-
-### High Memory Usage
-
-```text
-Grafana
-   │
-   ▼
-Memory Metrics
-   │
-   ▼
-Identify Resource Usage
-   │
-   ▼
-Troubleshoot Pod
-```
-
-Useful Kubernetes commands:
+After Terraform creates the Kubernetes cluster:
 
 ```bash
-kubectl get pods -n bloomworld
+gcloud container clusters get-credentials bloomworld-gke \
+  --region asia-south1 \
+  --project YOUR_PROJECT_ID
 ```
 
-```bash
-kubectl describe pod <pod-name> -n bloomworld
-```
+Check the cluster:
 
 ```bash
-kubectl logs <pod-name> -n bloomworld
-```
-
-```bash
-kubectl get deployment -n bloomworld
-```
-
-```bash
-kubectl get svc -n bloomworld
+kubectl get nodes
 ```
 
 ---
 
-# 🚀 Application Deployment
+# 3. Kubernetes RBAC
 
-To deploy the Kubernetes resources manually:
+The project includes a Kubernetes ServiceAccount and RBAC configuration.
 
-```bash
-kubectl apply -f kubernets/namespace.yaml
-```
+Apply the RBAC configuration:
 
 ```bash
 kubectl apply -f kubernets/serviceaccount.yaml
 ```
 
+Check the Role:
+
 ```bash
+kubectl get roles -n bloomworld
+```
+
+Check the ServiceAccount:
+
+```bash
+kubectl get serviceaccount -n bloomworld
+```
+
+RBAC is used to control what permissions Kubernetes workloads and users have inside the cluster.
+
+---
+
+# 4. Deploy Kubernetes Application
+
+Apply the Kubernetes resources:
+
+```bash
+kubectl apply -f kubernets/namespace.yaml
+kubectl apply -f kubernets/serviceaccount.yaml
 kubectl apply -f kubernets/service.yaml
-```
-
-```bash
+kubectl apply -f kubernets/deployment.yaml
+kubectl apply -f kubernets/hpa.yaml
 kubectl apply -f kubernets/gateway.yaml
-```
-
-```bash
 kubectl apply -f kubernets/httproute.yaml
 ```
 
+Check the deployment:
+
 ```bash
-kubectl apply -f kubernets/hpa.yaml
+kubectl get deployments -n bloomworld
 ```
 
-The application deployment can then be verified using:
+Check the pods:
 
 ```bash
 kubectl get pods -n bloomworld
 ```
 
----
+Check the services:
 
-# 📊 Monitoring Access
-
-Prometheus and Grafana are deployed inside the Kubernetes cluster.
-
-Grafana provides a web-based dashboard for monitoring Kubernetes resources.
-
-Important monitoring areas include:
-
-* Cluster CPU usage
-* Cluster memory usage
-* Namespace resource usage
-* Pod resource usage
-* Kubernetes workloads
+```bash
+kubectl get services -n bloomworld
+```
 
 ---
 
-# 🎯 DevSecOps Practices Demonstrated
+# 5. Install Argo CD
 
-This project demonstrates the following practices:
+Create the Argo CD namespace:
 
-### DevOps
+```bash
+kubectl create namespace argocd
+```
 
-* Infrastructure as Code
-* CI/CD automation
-* Containerization
-* Kubernetes orchestration
-* Autoscaling
-* Monitoring
-* GitOps
+Install Argo CD:
 
-### DevSecOps
+```bash
+kubectl apply -n argocd \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+```
 
-* RBAC
-* Workload Identity Federation
-* Container vulnerability scanning
-* Artifact Registry
-* Secure cloud authentication
-* Kubernetes access control
+Wait for the pods:
 
----
+```bash
+kubectl get pods -n argocd
+```
 
-# 🧩 Challenges and Troubleshooting
+Expose Argo CD:
 
-During the project implementation, several issues were identified and resolved.
+```bash
+kubectl patch svc argocd-server \
+  -n argocd \
+  -p '{"spec": {"type": "LoadBalancer"}}'
+```
 
-Examples include:
+Check the external IP:
 
-### Frontend Caching
+```bash
+kubectl get svc argocd-server -n argocd
+```
 
-A frontend deployment update was initially affected by caching. The issue was verified by testing from different devices and browser sessions.
+Get the Argo CD username:
 
-### Argo CD Synchronization
+```text
+Username: admin
+```
 
-Argo CD synchronization initially failed because a `ServiceMonitor` resource required the Prometheus Operator CRD.
+Get the initial password:
 
-The issue was resolved by ensuring the required monitoring components were installed or by adjusting the deployment configuration.
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret \
+  -o jsonpath="{.data.password}" | base64 -d
+```
 
-### Kubernetes API Connectivity
+Apply the BloomWorld Argo CD application:
 
-Backend connectivity and routing were verified using Kubernetes Services, Gateway, and HTTPRoute configuration.
+```bash
+kubectl apply -f bloomworld-argocd.yaml
+```
 
----
+Check the application:
 
-# 📸 Screenshots
-
-The following screenshots should be included in the project documentation or repository:
-
-* GKE Cluster
-* Terraform deployment
-* GitHub Actions pipeline
-* Trivy security scan
-* Artifact Registry Docker image
-* Argo CD application
-* Grafana monitoring dashboard
-* BloomWorld frontend application
-* Kubernetes pods and services
-
----
-
-# 🔮 Future Improvements
-
-Possible future improvements include:
-
-* Centralized application logging
-* SonarQube integration for code quality analysis
-* Automated security policy enforcement
-* Alert notifications
-* Database integration
-* Persistent storage
-* HTTPS/TLS configuration
-* Production-grade secret management integration
-* Advanced Kubernetes network policies
+```bash
+kubectl get applications -n argocd
+```
 
 ---
 
-# 👩‍💻 Author
+# 6. Install Prometheus and Grafana
 
-**Pathima Reihana**
+Add the Prometheus Helm repository:
 
-DevOps / DevSecOps Engineer
+```bash
+helm repo add prometheus-community \
+  https://prometheus-community.github.io/helm-charts
+```
+
+Update the repository:
+
+```bash
+helm repo update
+```
+
+Create the monitoring namespace:
+
+```bash
+kubectl create namespace monitoring
+```
+
+Install Prometheus and Grafana:
+
+```bash
+helm install monitoring \
+  prometheus-community/kube-prometheus-stack \
+  -n monitoring
+```
+
+Check the monitoring pods:
+
+```bash
+kubectl get pods -n monitoring
+```
+
+Get the Grafana password:
+
+```bash
+kubectl get secret monitoring-grafana \
+  -n monitoring \
+  -o jsonpath="{.data.admin-password}" | base64 -d
+```
+
+Grafana username:
+
+```text
+admin
+```
+
+Access Grafana using port forwarding:
+
+```bash
+kubectl port-forward \
+  -n monitoring \
+  svc/monitoring-grafana \
+  3000:80
+```
+
+Open:
+
+```text
+http://localhost:3000
+```
+
+Prometheus collects Kubernetes and application metrics, while Grafana provides dashboards for visualization and troubleshooting.
 
 ---
 
-# 📄 Conclusion
+# 7. Trivy Security Scanning
 
-BloomWorld demonstrates a practical implementation of a **cloud-native DevSecOps architecture** using Google Cloud Platform and Kubernetes.
+Trivy is integrated into the CI/CD pipeline to scan the Docker image for vulnerabilities.
 
-The project combines:
+The general scan command is:
 
-* Terraform infrastructure provisioning
-* Docker containerization
-* Google Artifact Registry
-* GitHub Actions CI/CD
-* Trivy security scanning
-* Kubernetes deployment
-* RBAC
-* Horizontal Pod Autoscaling
-* Gateway API
-* Argo CD GitOps
-* Prometheus monitoring
-* Grafana visualization
+```bash
+trivy image IMAGE_NAME
+```
 
-This project demonstrates the complete lifecycle from **application source code to secure, automated cloud deployment and monitoring**.
+Example:
+
+```bash
+trivy image asia-south1-docker.pkg.dev/PROJECT_ID/REPOSITORY/shop-service:latest
+```
+
+The CI/CD pipeline performs the following flow:
+
+```text
+Build Image
+    ↓
+Trivy Security Scan
+    ↓
+Push Image to Artifact Registry
+    ↓
+Deploy to Kubernetes
+```
 
 ---
 
-### ⚠️ One important thing before you submit
+# 8. CI/CD Pipeline
 
-In the README, **only claim features you actually implemented**.
+GitHub Actions is used for Continuous Integration and Deployment.
 
-From our work, I would especially verify these assignment requirements before finalizing:
+The pipeline performs:
 
-* Google Secret Manager integration
-* Small database
-* Persistent/managed storage
-* Application logging
+1. Checkout source code
+2. Authenticate with Google Cloud
+3. Build the Docker image
+4. Scan the image using Trivy
+5. Push the image to Google Artifact Registry
+6. Deploy Kubernetes resources
 
-If you want, I can next give you a **final polished README.md specifically matching your exact assignment requirements**, so you can directly copy it into GitHub.
+The workflow is automatically triggered when changes are pushed to the `main` branch.
+
+---
+
+# 9. Application Monitoring
+
+Monitoring is provided using:
+
+```text
+GKE Cluster
+    ↓
+Prometheus
+    ↓
+Grafana
+    ↓
+Monitoring Dashboards
+```
+
+The monitoring system provides visibility into:
+
+* CPU usage
+* Memory usage
+* Pod status
+* Node status
+* Resource utilization
+* Kubernetes workload health
+
+---
+
+# 10. Useful Troubleshooting Commands
+
+Check all application pods:
+
+```bash
+kubectl get pods -n bloomworld
+```
+
+Check pod details:
+
+```bash
+kubectl describe pod POD_NAME -n bloomworld
+```
+
+Check application logs:
+
+```bash
+kubectl logs POD_NAME -n bloomworld
+```
+
+Check deployments:
+
+```bash
+kubectl get deployments -n bloomworld
+```
+
+Check HPA:
+
+```bash
+kubectl get hpa -n bloomworld
+```
+
+Check Gateway:
+
+```bash
+kubectl get gateway -n bloomworld
+```
+
+Check HTTPRoute:
+
+```bash
+kubectl get httproute -n bloomworld
+```
+
+Check Argo CD application:
+
+```bash
+kubectl get applications -n argocd
+```
+
+Check monitoring pods:
+
+```bash
+kubectl get pods -n monitoring
+```
+
+---
+
+## Important Architecture Note
+
+Terraform is responsible for provisioning the **cloud infrastructure**. After the infrastructure is created, Kubernetes tools such as **kubectl and Helm** are used to install and configure:
+
+* Application workloads
+* Argo CD
+* Prometheus
+* Grafana
+* Kubernetes RBAC resources
+
+
+---
+
