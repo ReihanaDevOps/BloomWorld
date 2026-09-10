@@ -6,7 +6,7 @@ metadata:
   namespace: bloomworld
 
 spec:
-  gatewayClassName: gke-l7-global-external-managed
+  gatewayClassName: gke-l7-regional-external-managed
 
   listeners:
     - name: http
