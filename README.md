@@ -156,6 +156,68 @@ RBAC is used to control what permissions Kubernetes workloads and users have ins
 
 ---
 
+Yes, exactly. Since you already have a **GitHub Actions workflow**, you do **not need to manually deploy the Kubernetes manifests every time**.
+
+Your flow can be:
+
+```text
+Developer
+    ↓
+Push code to GitHub main branch
+    ↓
+GitHub Actions starts automatically
+    ↓
+Build Docker Image
+    ↓
+Trivy Security Scan
+    ↓
+Push Image to Artifact Registry
+    ↓
+Deploy Kubernetes Application
+```
+
+So in your README, instead of making these manual deployment commands the main method:
+
+```bash
+kubectl apply -f kubernets/namespace.yaml
+kubectl apply -f kubernets/deployment.yaml
+...
+```
+
+
+
+## Application Deployment
+
+The application deployment is automated using **GitHub Actions**.
+
+When changes are pushed to the `main` branch, the GitHub Actions workflow automatically:
+
+1. Builds the Docker image.
+2. Scans the image using Trivy.
+3. Pushes the image to Google Artifact Registry.
+4. Deploys the application to the GKE cluster.
+
+```bash
+git add .
+git commit -m "Update application"
+git push origin main
+```
+
+Then monitor the workflow in:
+
+##GitHub Action
+
+And verify the deployment:
+
+```bash
+kubectl get pods -n bloomworld
+kubectl get deployments -n bloomworld
+kubectl get services -n bloomworld
+```
+
+
+
+
 # 4. Deploy Kubernetes Application
 
 Apply the Kubernetes resources:
