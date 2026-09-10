@@ -154,7 +154,7 @@ function App() {
       setDeletingId(shop.id);
 
       const response = await fetch(
-        `http://localhost:3000/api/shops/${shop.id}`,
+        `http://35.207.225.27/api/shops/${shop.id}`,
         {
           method: "DELETE",
         }
